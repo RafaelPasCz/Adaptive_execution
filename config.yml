@@ -1,0 +1,24 @@
+refresh_interval_secs: 15 #tempo que a camada vai esperar para consultar métricas novamente  
+
+hosts:
+  "Google": #nome do host, pode escolher o nome que quiser, mas deve ser único
+    layer         : "cloud" #informação da camada, serve para identificar se é da nuvem ou borda/nevoa
+    faas_url      : "http://30.10.32.10:30080/function/function_name" # url da função faas
+    #camada cloud não tem prometheus
+
+  "Desktop":
+    priority           : "low" #prioridade, camada vai testar primeiro os hosts de prioridade 'high', depois os de prioridade 'low'  
+    layer              : "fog"                           
+    faas_url           : "https://10.81.24.151:31112/function/function_name"
+    prometheus_api_url : "http://10.81.24.151:9000/api/v1/query" #url da api do prometheus
+    max_cpu_use        : 90 #porcentagem minima de uso de cpu para ser considerado sobrecarregado
+    max_ram_use        : 90 #porcentagem minimo de uso de RAM para ser considerado sobrecarregado
+    
+  "TVBox":
+    priority           : "high"
+    layer              : "edge"
+    faas_url           : "http://10.82.24.104:8080/function/function_name"
+    prometheus_api_url : "http://10.81.24.104:9000/api/v1/query"
+    max_cpu_use        : 20
+    max_ram_use        : 90
+
