@@ -24,10 +24,10 @@ class Adaptive_FaaS():
         self.initialized = True
     
     def send_config(self):
-        """
-        Lê o arquivo de configuração e o envia para o servidor via POST.
-        Retorna True em caso de sucesso, False em caso de falha.
-        """
+    
+        #Lê o arquivo de configuração no caminho especificado e o envia para o servidor via POST.
+        #Retorna True em caso de sucesso, False em caso de falha.
+        
         if not self.initialized:
             print("[ERRO] A classe Adaptive_FaaS não foi inicializada corretamente.")
             return False
@@ -55,18 +55,18 @@ class Adaptive_FaaS():
         
         print("[INFO] Configuração enviada com sucesso para o servidor.")
         return True
-        
+    #função pra debugar    
     def get_server_url(self): 
         return self.server_url
-
+    #função pra debugar
     def get_config_file_path(self): 
         return self.config_file_path
 
-    def request(self, function_name, data):
-    
+    def get_best_url(self,function_name):
+            
     #   Solicita ao servidor a melhor URL de FaaS para a função especificada pelo cliente.
-    #   Retorna a URL em caso de sucesso, ou None em caso de erro.
-        
+    #   Retorna a URL em caso de sucesso, ou False em caso de erro.
+
         if not self.initialized:
             print("Erro: Modulo não inicializado, use Adaptive_FaaS(<url do hospedeiro>, <caminho do arquivo de configuração>) para inicializar)\n", 
                   "e em seguida, send_config() para enviar a configuração para o hospedeiro")
@@ -80,28 +80,64 @@ class Adaptive_FaaS():
             # Constrói a URL para a requisição GET, adicionando o nome da função requisitada
             get_url = f"{self.server_url}/faas" if not self.server_url.endswith('/faas') else self.server_url
             
-            response = requests.get(get_url, params={'function_name' : function_name}, timeout=5)
+            response = requests.get(get_url, params={'function_name' : function_name}, timeout=10)
             response.raise_for_status() # Verifica se houve erros na requisição
 
             response_json = response.json()
             best_faas = response_json.get("best_faas_url")
-            return best_faas #temporário, até a lógica da requisição estiver pronta
+            return best_faas
 
         except requests.exceptions.HTTPError as e:
             # Erros específicos da resposta do servidor (como 404 - Not Found)
             print(f"\n[ERRO] O servidor retornou um erro: {e.response.status_code} {e.response.reason}")
             print(f"   Detalhes: {e.response.text}")
-            return None
+            return False
         except requests.exceptions.RequestException as e:
             print(f"\n[ERRO] Falha ao consultar o servidor: {e}")
-            return None
+            return False
         except json.JSONDecodeError:
             print("\n[ERRO] Falha ao decodificar a resposta JSON do servidor.")
-            return None
+            return False
         except Exception as e:
             print(f"\n[ERRO] Um erro inesperado ocorreu durante a requisição: {e}")
-            return None
+            return False
+
+
+    def request(self, function_name, data, json=False, text=False,timeout=5):
+        #Faz a requisição faas a função especificada pelo usuario, retorna a resposta
+        #HTTP em caso de sucesso
+        if json and text:
+            raise ValueError("A requisição não pode ser json e texto simultâneamente")
+                
+        best_faas = self.get_best_url(function_name)
+
+        #checagem de erro ao obter a melhor url        
+        if not best_faas:
+            raise ValueError("Erro ao obter a melhor url")
+
+        #checa se o usuario setou tanto json quanto text para true
+
         
-        params = {'data' : data}
-        requests.get(best_faas,params=params)
+        if json:
+            #parametro json do requests ja seta os headers automaticamente
+            response = requests.post(best_faas, json=data, timeout=timeout)
+
+        elif text:
+            headers = {'Content-Type' : 'text-plain'}
+            response = requests.post(best_faas, data=data, headers=headers, timeout=timeout)
+
+        #se o usuario não especificar, manda como byte cru    
+        elif not json and not text:
+            #coficar como ascii 
+            if type(data) == str:
+                data = bytes(data, encoding='ascii')
+            else:
+                data = bytes(data)    
+
+            headers = {'Content-Type' : 'application/octet-stream'}
+            response = requests.post(best_faas, data=data, headers=headers, timeout=timeout)
+
+        response.raise_for_status()    
+        return response
         #lógica com data
+
