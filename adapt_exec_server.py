@@ -276,9 +276,7 @@ def start(host_url, port):
     server_thread.start()
 
     # Para aguardar a configuração ser recebida
-    print("Servidor iniciado. Aguardando configuração via POST em /faas...")
     config_received_event.wait()  # A execução vai pausar aqui até o .set() ser chamado.
-    print("Configuração recebida. Iniciando monitoramento de hosts...")
 
     # Quando a configuração for recebida, a execução principal inicia
     query_cpu = "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[15s]))) * 100"
@@ -300,10 +298,5 @@ def start(host_url, port):
         # Atualiza o dicionário global que a API lê
         best_faas_urls = temp_best_urls
         
-        # Imprime o estado atual para depuração
-        print("\n--- STATUS ATUALIZADO ---")
-        for func, url in best_faas_urls.items():
-            print(f"Melhor host para '{func}': {url or 'Nenhum disponível'}")
-        print("-------------------------\n")
 
         time.sleep(current_refresh)
