@@ -53,7 +53,7 @@ class Host_table_entry:
     ram_use            : float
 
 
-    def print_slots(self): 
+    def print_slots(self): #pra debugar
         print("-------------------------------------------")
         print(f"name: {self.name}\n",
               f"priority: {self.priority}\n",
@@ -93,8 +93,8 @@ def print_table(entry_list):
 
 # função para processar o arquivo de configuração
 def parse_config(yaml_content):
-    table = []
-    cloud_layer = None
+    edge_fog_hosts_table = []
+
 
     yml_data = yaml.safe_load(yaml_content)
     
@@ -115,16 +115,17 @@ def parse_config(yaml_content):
                 cpu_use = 0,
                 ram_use = 0,
             )
-            table.append(entry)
+            edge_fog_hosts_table.append(entry)
         else:
             #host da nuvem não tem prometheus, então as informações são reduzidas
-            cloud_layer = Cloud_layer(
+            cloud_host = Cloud_layer(
                 name=host,
                 layer=properties.get('layer'),
                 faas_url=properties.get('faas_url')    
             )
-            
-    return refresh, table, cloud_layer
+
+    sorted_hosts = sorted(edge_fog_hosts_table, key=lambda host: host.getpriority() == 'low')
+    return refresh, sorted_hosts, cloud_host
 
 
 def find_best_faas(edge_fog_hosts_table, cloud_host, query_cpu, query_RAM):
@@ -161,18 +162,9 @@ def find_best_faas(edge_fog_hosts_table, cloud_host, query_cpu, query_RAM):
                     host.ram_use = float('inf')
 
         update_metrics()
-
-        #essa função lambda para o sort checa se os hosts na lista tem a prioridade 'low'
-        #no python, para ordenação de booleanos, False < True, então as entradas em que 
-        #(host.getpriority == 'low') == False vão aparecer primeiro em ordem crescente,
-        #ou seja, as primeiras entradas são as com a prioridade 'high', deste modo só
-        #é necessario iterar a lista uma vez para determinar se os hosts de maior prioridade 
-        #estão disponiveis, e se não, encontrar o primerio de menor prioridade disponivel
-        #ou fazer o fallback pra nuvem
-        sorted_hosts = sorted(edge_fog_hosts_table, key=lambda host: host.getpriority() == 'low')
-
+        
         #pesquisa nos hosts ordenados
-        for host in sorted_hosts:
+        for host in edge_fog_hosts_table:
             if is_host_available(host):
                 #envia o primeiro host apropriado que encontrar
                 return host.getfaas_url()
@@ -239,13 +231,20 @@ def server_functionality():
         except Exception as e:
             return jsonify({"error": "Erro ao processar a configuracao.", "details": str(e)}), 500
 
-def run_server():
-    app.run(host='0.0.0.0', port=5000, use_reloader=False)
+def run_server(host_url, port):
+    app.run(host=host_url, port=port, use_reloader=False)
 
 
-if __name__ == "__main__":
+def start(host_url, port):
+    global best_faas
+    global edge_fog_hosts_table
+    global cloud_host
+    global refresh_time
+    global config_lock
+    global config_received_event
+
     #inicia o servidor Flask em uma thread separada
-    server_thread = Thread(target=run_server)
+    server_thread = Thread(target=run_server, args=(host_url, port))
     server_thread.daemon = True
     server_thread.start()
 
@@ -256,7 +255,6 @@ if __name__ == "__main__":
     #quando a configuração for recebida, a execução principal inicia
     query_cpu = "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[15s]))) * 100" 
     query_RAM = "((avg_over_time(node_memory_MemTotal_bytes[15s]) - avg_over_time(node_memory_MemAvailable_bytes[15s]))/ avg_over_time(node_memory_MemTotal_bytes[15s])) * 100"
-    print_table(edge_fog_hosts_table)
     while True:
         with config_lock:
             current_hosts = edge_fog_hosts_table

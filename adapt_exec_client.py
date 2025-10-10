@@ -1,30 +1,29 @@
 import requests
 import json
-import time
 
 class Adaptive_FaaS():
     server_url : str
     config_file_path : str
     initialized : bool = False
 
-    def initialize(self, server_url, config_file_path):
+    def __init__(self, server_url, config_file_path):
             
         if server_url == None:
             print("Erro: url do servidor não definida\n", 
                   "uso: Adaptive_FaaS.initialize(<url do hospedeiro>,<caminho do arquivo de configuração>)")
-            return False
+            return None
             
         if config_file_path == None:   
             print("Erro: caminho do arquivo de configuração não definido\n", 
                   "uso: Adaptive_FaaS.initialize(<url do hospedeiro>,<caminho do arquivo de configuração>)")
-            return False 
+            return None
 
         #define os valores passados na inicialização
         self.server_url = server_url
         self.config_file_path = config_file_path
         self.initialized = True
-        return True
-
+        return None
+    
     def send_config(self):
         if self.server_url == None:
             print("Erro: url do servidor não definida\n", 
@@ -79,12 +78,4 @@ class Adaptive_FaaS():
         
         best_url = consult()
         return best_url
-        
-adapt = Adaptive_FaaS()
-adapt.initialize('http://127.0.0.1:5000/faas','./config.yml')
-adapt.send_config()
-time.sleep(20)
-best_faas = adapt.request()
-print(best_faas)
-
 
