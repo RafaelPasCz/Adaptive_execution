@@ -4,7 +4,7 @@ hosts:
   "Google": #nome do host, pode escolher o nome que quiser, mas deve ser único
     layer     : "cloud" #informação da camada, serve para identificar se é da nuvem ou borda/nevoa
     faas_urls : # url das funções faas
-      - "http://30.10.32.10:30080/function/figlet"
+      - "http://34.151.247.144:30080/function/crowdcount-yolo"
       #- "http://30.10.32.11:30080/function/another_function"
     #camada cloud não tem prometheus
 
@@ -12,7 +12,7 @@ hosts:
     priority           : "low" #prioridade, camada vai testar primeiro os hosts de prioridade 'high', depois os de prioridade 'low'  
     layer              : "fog"                           
     faas_urls          :
-      - "https://10.81.24.151:31112/function/figlet" #aqui, o function name é a ultima parte da URL, nesse caso, "figlet"
+      - "http://10.81.24.151:31112/function/crowdcount-yolo" #aqui, o function name é a ultima parte da URL, nesse caso, "figlet"
     prometheus_api_url : "http://10.81.24.151:9000/api/v1/query" #url da api do prometheus
     max_cpu_use        : 90 #porcentagem minima de uso de cpu para ser considerado sobrecarregado
     max_ram_use        : 90 #porcentagem minimo de uso de RAM para ser considerado sobrecarregado
@@ -21,7 +21,7 @@ hosts:
     priority           : "high"
     layer              : "edge"
     faas_urls          :
-      - "http://10.81.24.104:8080/function/figlet"
-    prometheus_api_url : "http://10.81.24.104:9000/api/v1/query"
+      - "http://10.81.24.12:8080/function/crowdcount-yolo"
+    prometheus_api_url : "http://10.81.24.12:9000/api/v1/query"
     max_cpu_use        : 20
     max_ram_use        : 90

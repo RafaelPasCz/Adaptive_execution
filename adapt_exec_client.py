@@ -119,8 +119,7 @@ class Adaptive_FaaS():
 
         
         if json:
-            #parametro json do requests ja seta os headers automaticamente
-            response = requests.post(best_faas, json=data, timeout=timeout)
+            response = requests.post(best_faas, data=data, timeout=timeout)
 
         elif text:
             headers = {'Content-Type' : 'text-plain'}
