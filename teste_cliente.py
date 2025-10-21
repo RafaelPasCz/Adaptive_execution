@@ -18,7 +18,7 @@ def construct_json(imserial):
 
 
 ROOT = "/home/rafael/Desktop/quarto_ano/TCC"
-SERVER_ADDRESS = "http://127.0.0.1:5000"
+SERVER_ADDRESS = "http://10.81.24.109:5000"
 IMGPATH = ROOT + '/Dataset/frames/seq_000001.jpg'
     
     # Caminho para o arquivo de configuração YAML
@@ -42,11 +42,9 @@ try:
             response = client.request(function_name="crowdcount-yolo", data = json_data, json=True, timeout=90)
 
             if '\n' in response.text.strip():
-                print('entrou')
                 texto_direita = response.text.strip().split('\n')[-1]
                 print(texto_direita)
             else:
-                print('nao entrou')
                 print(response.text)
         
 

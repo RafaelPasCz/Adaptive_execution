@@ -114,7 +114,7 @@ class Adaptive_FaaS():
         #checagem de erro ao obter a melhor url        
         if not best_faas:
             raise ValueError("Erro ao obter a melhor url")
-
+        print(best_faas)
         #checa se o usuario setou tanto json quanto text para true
 
         
