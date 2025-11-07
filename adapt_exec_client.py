@@ -137,6 +137,6 @@ class Adaptive_FaaS():
             response = requests.post(best_faas, data=data, headers=headers, timeout=timeout)
 
         response.raise_for_status()    
-        return response
+        return response, best_faas
         #lógica com data
 
