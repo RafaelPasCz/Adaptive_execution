@@ -230,11 +230,10 @@ def start(host_url, port):
     query_RAM = "((avg_over_time(node_memory_MemTotal_bytes[15s]) - avg_over_time(node_memory_MemAvailable_bytes[15s]))/ avg_over_time(node_memory_MemTotal_bytes[15s])) * 100"
     
     while True:
-        # Copia tempo de refresh e referências para não travar o Lock durante a request de rede
+
         with data_lock:
             current_refresh = refresh_time
-            # Não precisamos copiar a lista inteira, pois vamos modificar os atributos internos dos objetos
-            # e queremos que isso reflita globalmente. Mas para iterar com segurança, usamos a ref local.
+
             hosts_ref = edge_fog_hosts_table 
         
         # Faz as requisições de rede (Lento) SEM o Lock, para não travar o cliente
