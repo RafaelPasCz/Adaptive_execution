@@ -1,0 +1,27 @@
+refresh_interval_secs: 15 
+
+hosts:
+  "Google": 
+    layer     : "cloud" 
+    faas_urls : 
+      - "http://35.198.21.81:30080/function/crowdcount-yolo"
+
+  "Desktop":
+    priority           : "low"
+    layer              : "fog"                           
+    faas_urls          :
+      - "http://10.81.24.151:31112/function/crowdcount-yolo"
+    prometheus_api_url : "http://10.81.24.151:9000/api/v1/query"
+    max_cpu_use        : 30 
+    max_ram_use        : 90 
+    min_req_interval_secs : 5 
+    
+  "TVBox":
+    priority           : "high"
+    layer              : "edge"
+    faas_urls          :
+      - "http://10.81.24.31:8080/function/crowdcount-yolo"
+    prometheus_api_url : "http://10.81.24.31:9000/api/v1/query"
+    max_cpu_use        : 30
+    max_ram_use        : 90
+    min_req_interval_secs : 10 
